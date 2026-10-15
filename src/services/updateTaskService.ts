@@ -1,6 +1,6 @@
 import { prisma } from "@/database/prisma"
 import { appError } from "@/utils/appError"
-import { Status } from "../../generated/prisma/enums"
+import { Status } from "@prisma/client"
 
 type UpdateTaskParams = {
   taskId: string
