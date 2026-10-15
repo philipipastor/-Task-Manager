@@ -24,9 +24,9 @@ class TaskController {
             throw new appError("O usuário não pertence á equipe informada", 400)
         }
 
-        await prisma.tasks.create({ data: { title, description, assignedTo: assigned_to, teamId: team_id } })
+        const task = await prisma.tasks.create({ data: { title, description, assignedTo: assigned_to, teamId: team_id } })
 
-        response.status(201).json("task created")
+        response.status(201).json(task)
     }
 
     async index(request: Request, response: Response) {
