@@ -24,7 +24,10 @@ class TaskController {
             throw new appError("O usuário não pertence á equipe informada", 400)
         }
 
-        const task = await prisma.tasks.create({ data: { title, description, assignedTo: assigned_to, teamId: team_id } })
+        const task = await prisma.tasks.create({
+            data: { title, description, assignedTo: assigned_to, teamId: team_id },
+            include: { team: { select: { name: true } }, user: { select: { name: true } } }
+        })
 
         response.status(201).json(task)
     }
@@ -32,10 +35,9 @@ class TaskController {
     async index(request: Request, response: Response) {
         const querySchema = z.object({
             status: z.enum(["Pendente", "Em_progresso", "Concluído"]).optional(),
-            priority: z.enum(["Alta", "Média", "Baixa"]).optional()
         })
 
-        const { status, priority } = querySchema.parse(request.query)
+        const { status } = querySchema.parse(request.query)
 
         if (!request.user) {
             throw new appError("Usuário não autenticado", 401)
@@ -46,10 +48,16 @@ class TaskController {
         }
 
         if (request.user.role === "Member") {
-            return response.json(await prisma.tasks.findMany({ where: { assignedTo: request.user.id, status, priority } }))
+            return response.json(await prisma.tasks.findMany({
+                where: { assignedTo: request.user.id, status },
+                include: { team: { select: { name: true } }, user: { select: { name: true } } }
+            }))
         }
 
-        const tasks = await prisma.tasks.findMany({ where: { status, priority } })
+        const tasks = await prisma.tasks.findMany({
+            where: { status },
+            include: { team: { select: { name: true } }, user: { select: { name: true } } }
+        });
 
         response.json(tasks)
     }
