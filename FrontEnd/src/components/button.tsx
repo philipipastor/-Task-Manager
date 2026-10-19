@@ -7,7 +7,7 @@ export function Button({ onclick, children, ...props }: ButtonProps) {
         <div>
             <button type="submit" {...props}
                 className="
-                    flex h-11 w-full items-center justify-center
+                    flex h-11 w-full items-center justify-center gap-2 [&>img]:size-4 [&>img]:shrink-0 [&>img]:object-contain
                     rounded-md bg-brand px-4 whitespace-nowrap
                     text-sm font-medium text-on-brand
                     cursor-pointer transition-colors
