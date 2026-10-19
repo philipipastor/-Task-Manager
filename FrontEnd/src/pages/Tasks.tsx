@@ -8,6 +8,8 @@ import { Button } from "../components/button"
 import { type Task } from "../types/task"
 import { statusOptions } from "../utils/statusOptions"
 
+import iconMais from "../assets/mais.png"
+
 import { api } from "../services/api"
 
 export function TaskList() {
@@ -45,7 +47,10 @@ export function TaskList() {
 
                     <p className="mt-2 text-sm text-muted">Um lugar para acompanhar o que precisa ser feito</p>
 
-                    <Button onClick={() => navigate("/newTask")}> + Nova tarefa</Button>
+                    <Button type="button" onClick={() => navigate("/newTask")}>
+                        <img alt="" aria-hidden="true" src={iconMais} />
+                        Nova tarefa
+                    </Button>
                 </div>
 
 
@@ -73,11 +78,15 @@ export function TaskList() {
                     </div>
                 </div>
 
+
                 <div className="mt-5 flex flex-col gap-2.5">
                     {tasks.map((task) => (
-                        <TaskCard key={task.id} task={task} />
+                        <button key={task.id} onClick={() => navigate(`/tasks/${task.id}`)}>
+                            <TaskCard key={task.id} task={task} />
+                        </button>
                     ))}
                 </div>
+
 
             </section>
         </main >

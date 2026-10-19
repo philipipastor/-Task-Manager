@@ -7,7 +7,7 @@ type Props = {
 export function TaskCard({ task }: Props) {
   return (
     <div className="flex flex-col items-start justify-between gap-4 rounded-lg border border-line bg-surface px-4 py-5 transition-colors hover:border-brand/40 sm:flex-row sm:items-center">
-      <div className="min-w-0">
+      <div className="min-w-0 text-left">
         <h3 className="text-sm font-semibold wrap-anywhere text-content">
           {task.title}
         </h3>
