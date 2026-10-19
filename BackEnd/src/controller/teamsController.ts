@@ -17,7 +17,7 @@ class TeamsController {
     }
 
     async index(request: Request, response: Response) {
-        const teams = await prisma.teams.findMany()
+        const teams = await prisma.teams.findMany({include: { _count: { select: { teamsMembers: true } }}})
 
         response.json(teams)
     }

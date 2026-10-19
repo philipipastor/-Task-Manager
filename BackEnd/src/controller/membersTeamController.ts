@@ -72,7 +72,7 @@ class MembersTeamsController {
             where:
                 { teamId: team_id },
             include:
-                { user: { select: { id: true, name: true } } }
+                { user: { select: { id: true, name: true, email: true } } }
         })
 
         response.json(members)
