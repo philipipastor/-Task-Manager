@@ -10,5 +10,6 @@ taskRoutes.post("/", taskController.create)
 taskRoutes.get("/", taskController.index)
 taskRoutes.delete("/:id", taskController.remove)
 taskRoutes.patch("/:id", taskController.update)
+taskRoutes.get("/:id", taskController.show)
 
 export { taskRoutes }

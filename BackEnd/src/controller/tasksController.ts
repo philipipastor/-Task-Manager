@@ -10,11 +10,12 @@ class TaskController {
         const bodySchema = z.object({
             title: z.string().min(3),
             description: z.string().min(3),
+            priority: z.enum(["Alta", "Média", "Baixa"]),
             assigned_to: z.string().uuid(),
-            team_id: z.string().uuid()
+            team_id: z.string().uuid(),
         })
 
-        const { title, description, assigned_to, team_id } = bodySchema.parse(request.body)
+        const { title, description, priority, assigned_to, team_id } = bodySchema.parse(request.body)
 
         const sameEquip = await prisma.teamsMembers.findFirst({
             where: { userId: assigned_to, teamId: team_id }
@@ -25,7 +26,7 @@ class TaskController {
         }
 
         const task = await prisma.tasks.create({
-            data: { title, description, assignedTo: assigned_to, teamId: team_id },
+            data: { title, description, priority, assignedTo: assigned_to, teamId: team_id },
             include: { team: { select: { name: true } }, user: { select: { name: true } } }
         })
 
@@ -135,6 +136,25 @@ class TaskController {
         await prisma.tasks.delete({ where: { id } })
 
         response.json("task deletada")
+    }
+
+    async show(request: Request, response: Response) {
+        const bodySchema = z.object({
+            id: z.string().uuid()
+        })
+
+        const { id } = bodySchema.parse(request.params)
+
+        const task = await prisma.tasks.findUnique({
+            where: { id },
+            include: { team: { select: { name: true } }, user: { select: { name: true } } }
+        })
+
+        if (!task) {
+            throw new appError("Tarefa não existe", 404)
+        }
+
+        return response.json(task)
     }
 }
 

@@ -68,7 +68,7 @@ model Tasks {
   title       String
   description String
   status      Status   @default(Pendente)
-  priority    Priority @default(Baixa)
+  priority    Priority 
 
   assignedTo String @map("assigned_to")
   user       User   @relation(fields: [assignedTo], references: [id])
