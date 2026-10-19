@@ -15,7 +15,7 @@ import { api } from "../services/api"
 const schema = z.object({
   name: z.string().trim().min(3),
   email: z.string().trim().email("Insira um e-mail válido"),
-  password: z.string().min(6, "A senha deve conter no mínimo 6 caracteres")
+  password: z.string().min(5, "A senha deve conter no mínimo 6 caracteres")
 })
 
 type RegisterData = z.infer<typeof schema>
