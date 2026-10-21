@@ -43,6 +43,7 @@ model Teams {
   id           String         @id @default(uuid())
   name         String
   description  String?
+  active      Boolean  @default(true)
   createdAt    DateTime       @default(now()) @map("created_at")
   updateAt     DateTime       @updatedAt @map("updated_at")
   teamsMembers TeamsMembers[]
@@ -85,7 +86,7 @@ model TaskHistory {
   id         String      @id @default(uuid())
 
   taskId     String      @map("task_id")
-  task       Tasks    @relation(fields: [taskId], references: [id])
+  task       Tasks    @relation(fields: [taskId], references: [id], onDelete: Cascade)
 
   changedBy  String      @map("change_by")
   user       User     @relation(fields: [changedBy], references: [id])
