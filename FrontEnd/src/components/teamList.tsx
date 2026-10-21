@@ -33,7 +33,7 @@ export function TeamList({
                             }`}
                     >
                         <div className="flex items-center justify-between gap-3">
-                            <span className="min-w-0 break-words text-sm font-medium">
+                            <span className="min-w-0 wrap-break-word text-sm font-medium">
                                 {team.name}
                             </span>
 
@@ -43,6 +43,7 @@ export function TeamList({
                         </div>
                         <p className="mt-1 text-xs text-muted">
                             {team._count?.teamsMembers ?? 0} membros
+                            {!team.active && <span className="ml-2 text-danger">Inativa</span>}
                         </p>
                     </button>
                 ))}

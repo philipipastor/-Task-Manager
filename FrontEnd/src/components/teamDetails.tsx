@@ -7,21 +7,20 @@ import { Button } from "./button";
 import iconMais from "../assets/mais.png"
 import iconPerson from "../assets/usuario.png"
 
+
 type TeamDetailsProps = {
   team: Teams | undefined;
   members: TeamMemberType[];
   loadingMembers: boolean;
   onRemoveMember: (member: TeamMemberType) => void;
   onAddMember: () => void
+  onEdit: () => void;
+  onToggleActive: () => void;
+  changingStatus: boolean;
 };
 
-export function TeamDetails({
-  team,
-  members,
-  loadingMembers,
-  onRemoveMember,
-  onAddMember
-}: TeamDetailsProps) {
+export function TeamDetails({ team, members, loadingMembers, onRemoveMember, onAddMember, onEdit, onToggleActive, changingStatus }: TeamDetailsProps) {
+
   if (!team) {
     return (
       <section className="flex min-h-96 flex-1 items-center justify-center p-6">
@@ -34,13 +33,30 @@ export function TeamDetails({
 
   return (
     <section className="min-w-0 flex-1 p-5 sm:p-7">
-      <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-lg bg-brand-light text-brand">
-        <img src={iconPerson} alt="" aria-hidden="true" className="size-5 object-contain invert" />
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+        <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-brand-light text-brand">
+          <img src={iconPerson} alt="" aria-hidden="true" className="size-5 object-contain invert" />
+        </div>
+        <div className="ml-auto flex flex-wrap items-center justify-end gap-3">
+          <Button type="button" onClick={onEdit} disabled={changingStatus}>
+            Editar equipe
+          </Button>
+          <button type="button" onClick={onToggleActive} disabled={changingStatus}
+            className={`inline-flex h-11 cursor-pointer items-center justify-center rounded-md border px-4 text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand disabled:cursor-not-allowed disabled:opacity-60 ${team.active ? "border-danger/40 text-danger hover:bg-danger-bg" : "border-brand/40 text-brand hover:bg-brand-light"}`}>
+            {changingStatus ? "Salvando..." : team.active ? "Inativar equipe" : "Ativar equipe"}
+          </button>
+        </div>
       </div>
 
-      <h2 className="text-xl font-semibold text-content">
-        {team.name}
-      </h2>
+      <div className="flex flex-wrap items-center gap-3">
+        <h2 className="min-w-0 text-xl font-semibold wrap-anywhere text-content">
+          {team.name}
+        </h2>
+
+        <span className={`inline-flex shrink-0 rounded-full px-3 py-1 text-xs font-medium ${team.active ? "bg-brand-light text-brand" : "bg-danger-bg text-danger"}`}>
+          {team.active ? "Ativa" : "Inativa"}
+        </span>
+      </div>
 
       <p className="mt-2 text-sm text-muted">
         {team.description || "Esta equipe não possui descrição."}

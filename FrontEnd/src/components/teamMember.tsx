@@ -21,7 +21,7 @@ export function TeamMember({ member, onRemove }: TeamMemberProps) {
       </div>
 
       <div className="min-w-0 flex-1">
-        <p className="break-words text-sm font-medium text-content">
+        <p className="wrap-break-word text-sm font-medium text-content">
           {member.user.name}
         </p>
 

@@ -3,6 +3,8 @@ import { TeamList } from "../components/teamList";
 import { TeamDetails } from "../components/teamDetails";
 import { NewTeam } from "../components/newTeam";
 import { AddTeamMember } from "../components/addTeamMember";
+import { EditTeam } from "../components/editTeam";
+import { isAxiosError } from "axios";
 
 import { api } from "../services/api";
 
@@ -19,7 +21,8 @@ export function Teams() {
   const [teams, setTeams] = useState<Teams[]>([]);
   const [selectedTeamId, setSelectedTeamId] = useState<string | null>(null);
 
-  const [view, setView] = useState<"details" | "new" | "addMember">("details");
+  const [view, setView] = useState<"details" | "new" | "addMember" | "edit">("details");
+  const [updatingTeamId, setUpdatingTeamId] = useState<string | null>(null);
 
   const [members, setMembers] = useState<TeamMember[]>([]);
 
@@ -105,11 +108,9 @@ export function Teams() {
     setError("");
 
     try {
-      // Ajuste este endpoint conforme sua rota DELETE no backend.
-      await api.delete("/members", {
+      await api.delete(`/members/${selectedTeamId}`, {
         data: {
           user_id: member.userId,
-          team_id: selectedTeamId
         }
       });
 
@@ -137,6 +138,28 @@ export function Teams() {
     } catch (error) {
       console.log(error);
       setError("Não foi possível remover o membro.");
+    }
+  }
+
+  function handleTeamEdited(updatedTeam: Teams) {
+    setTeams(previous => previous.map(team => team.id === updatedTeam.id ? { ...team, ...updatedTeam } : team));
+    setError("");
+    setView("details");
+  }
+
+  async function toggleTeamActive() {
+    if (!selectedTeam || updatingTeamId) return;
+    const team = selectedTeam;
+    setUpdatingTeamId(team.id);
+    setError("");
+    try {
+      await api.patch(`/teams/${team.id}/${team.active ? "desactive" : "active"}`);
+      setTeams(previous => previous.map(item => item.id === team.id ? { ...item, active: !team.active } : item));
+    } catch (error) {
+      const message = isAxiosError(error) ? error.response?.data?.message : undefined;
+      setError(typeof message === "string" ? message : "Não foi possível alterar o status da equipe. Tente novamente.");
+    } finally {
+      setUpdatingTeamId(null);
     }
   }
 
@@ -198,7 +221,7 @@ export function Teams() {
         </div>
 
         <div>
-          <Button type="button" onClick={() => setView("new")}>
+          <Button type="button" onClick={() => { setError(""); setView("new"); }}>
             <img src={iconMais} alt="" aria-hidden="true" className="size-4 shrink-0 object-contain" /> Nova equipe
           </Button>
         </div>
@@ -221,6 +244,7 @@ export function Teams() {
               teams={teams}
               selectedTeamId={selectedTeamId}
               onSelectTeam={(id) => {
+                setError("");
                 setSelectedTeamId(id);
                 setView("details");
               }}
@@ -230,6 +254,13 @@ export function Teams() {
               <NewTeam
                 onCancel={() => setView("details")}
                 onCreated={handleTeamCreated}
+              />
+            ) : view === "edit" && selectedTeam ? (
+              <EditTeam
+                key={selectedTeam.id}
+                team={selectedTeam}
+                onCancel={() => setView("details")}
+                onEdited={handleTeamEdited}
               />
             ) : view === "addMember" && selectedTeam ? (
               <AddTeamMember
@@ -244,6 +275,9 @@ export function Teams() {
                 loadingMembers={loadingMembers}
                 onRemoveMember={removeMember}
                 onAddMember={() => setView("addMember")}
+                onEdit={() => { setError(""); setView("edit"); }}
+                onToggleActive={toggleTeamActive}
+                changingStatus={updatingTeamId !== null}
               />
             )}
           </div>
