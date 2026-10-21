@@ -17,6 +17,24 @@ class TaskController {
 
         const { title, description, priority, assigned_to, team_id } = bodySchema.parse(request.body)
 
+        if (!request.user) {
+            throw new appError("Usuário não autenticado", 401)
+        }
+
+        if (!["Admin", "Member"].includes(request.user.role)) {
+            throw new appError("Acesso não autorizado", 403)
+        }
+
+        if (request.user.role === "Member" && assigned_to !== request.user.id) {
+            throw new appError("Você só pode criar tarefas para si mesmo", 403)
+        }
+
+        const team = await prisma.teams.findUnique({ where: { id: team_id } })
+
+        if (!team || !team.active) {
+            throw new appError("Não é possível criar tarefas em uma equipe inexistente ou inativa", 409)
+        }
+
         const sameEquip = await prisma.teamsMembers.findFirst({
             where: { userId: assigned_to, teamId: team_id }
         })
@@ -152,6 +170,10 @@ class TaskController {
 
         if (!task) {
             throw new appError("Tarefa não existe", 404)
+        }
+
+        if (request.user?.role === "Member" && request.user?.id !== task.assignedTo) {
+            throw new appError("Essa tarefa não pertence a você", 403)
         }
 
         return response.json(task)

@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { z } from "zod";
 import { prisma } from "@/database/prisma";
+import { appError } from "@/utils/appError";
 
 class TeamsController {
     async create(request: Request, response: Response) {
@@ -17,7 +18,24 @@ class TeamsController {
     }
 
     async index(request: Request, response: Response) {
-        const teams = await prisma.teams.findMany({include: { _count: { select: { teamsMembers: true } }}})
+        if (!request.user) {
+            throw new appError("Usuário não autenticado", 401)
+        }
+
+        if (!["Admin", "Member"].includes(request.user.role)) {
+            throw new appError("Acesso não autorizado", 403)
+        }
+
+        if (request.user.role === "Member") {
+            const teams = await prisma.teams.findMany({
+                where: { active: true, teamsMembers: { some: { userId: request.user.id } } },
+                include: { _count: { select: { teamsMembers: true } } }
+            })
+
+            response.json(teams)
+        }
+
+        const teams = await prisma.teams.findMany({ include: { _count: { select: { teamsMembers: true } } } })
 
         response.json(teams)
     }
@@ -40,16 +58,56 @@ class TeamsController {
         response.json(teams)
     }
 
-    async remove(request: Request, response: Response) {
+    async desactive(request: Request, response: Response) {
         const paramsSchema = z.object({
             id: z.string().uuid()
         })
 
         const { id } = paramsSchema.parse(request.params)
 
-        await prisma.teams.delete({ where: { id } })
+        const teams = await prisma.teams.findUnique({ where: { id } })
 
-        response.json("Time removido")
+
+        if (!teams) {
+            throw new appError("Equipe não encontrada", 404)
+        }
+
+        if (!teams.active) {
+            throw new appError("Equipe já está inativa", 400)
+        }
+
+        await prisma.teams.update({ where: { id }, data: { active: false } })
+
+        response.json()
+    }
+
+    async active(request: Request, response: Response) {
+        const paramsSchema = z.object({
+            id: z.string().uuid()
+        })
+
+        const { id } = paramsSchema.parse(request.params)
+
+        const team = await prisma.teams.findUnique({
+            where: { id }
+        })
+
+        if (!team) {
+            throw new appError("Equipe não encontrada", 404)
+        }
+
+        if (team.active) {
+            throw new appError("Equipe já está ativa", 409)
+        }
+
+        await prisma.teams.update({
+            where: { id },
+            data: {
+                active: true
+            }
+        })
+
+        return response.json()
     }
 }
 

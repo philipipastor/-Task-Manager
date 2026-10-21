@@ -6,11 +6,13 @@ import { verifyUserAuthorization } from "@/middleware/verifyUserAutorization";
 const teamRoutes = Router()
 const teamsController = new TeamsController()
 
-teamRoutes.use(ensureAuthenticated, verifyUserAuthorization(["Admin"]))
-
-teamRoutes.post("/", teamsController.create)
+teamRoutes.use(ensureAuthenticated)
 teamRoutes.get("/", teamsController.index)
+
+teamRoutes.use(verifyUserAuthorization(["Admin"]))
+teamRoutes.post("/", teamsController.create)
 teamRoutes.put("/:id", teamsController.update)
-teamRoutes.delete("/:id", teamsController.remove)
+teamRoutes.patch("/:id/desactive", teamsController.desactive)
+teamRoutes.patch("/:id/active", teamsController.active)
 
 export { teamRoutes }
