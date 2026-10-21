@@ -1,25 +1,21 @@
 import { useAuth } from "../hook/useAuth";
 
-import { BrowserRouter } from "react-router";
-
 import { AuthRoutes } from "./AuthRoutes";
 import { TaskRoutes } from "./TaskRoutes";
 
-function AppRoutes() {
-    const { user } = useAuth()
+export function AppRoutes() {
+    const { user, isLoading } = useAuth()
 
-    if(!user){
-        return <AuthRoutes/>
+    if(isLoading){
+        return(
+            <div className="flex min-h-svh items-center justify-center">
+                <p>Carregando...</p>
+            </div>
+        )
     }
 
-    return <TaskRoutes/>
+    return user ? <TaskRoutes/> : <AuthRoutes/>
+
 } 
 
-export function Route() {
-    return (
-        <BrowserRouter>
-            <AppRoutes />
-        </BrowserRouter>
-    )
-}
 

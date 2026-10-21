@@ -1,12 +1,18 @@
 import { createContext, useEffect, useState, type ReactNode } from "react";
 
+import { useNavigate } from "react-router";
+
 import { api } from "../services/api";
 
+import { AxiosError } from "axios"
+
 import type { User } from "../types/user";
+import type { AuthResponse } from "../types/user";
 
 type AuthContextData = {
     user: User | null,
-    signIn: (user: User) => void,
+    isLoading: boolean,
+    signIn: (session: AuthResponse) => void,
     signOut: () => void
 }
 
@@ -15,14 +21,17 @@ const LocalStorageKey = "@TaskManager"
 export const authContext = createContext<AuthContextData | undefined>(undefined)
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-    const [user, setUser] = useState<User | null>(null)
+    const navigate = useNavigate()
 
-    function signIn(authenticatedUser: User) {
+    const [user, setUser] = useState<User | null>(null)
+    const [isLoading, setIsLoading] = useState(true)
+
+    function signIn(authenticatedUser: AuthResponse) {
         localStorage.setItem(`${LocalStorageKey}:user`, JSON.stringify(authenticatedUser.user))
         localStorage.setItem(`${LocalStorageKey}:token`, authenticatedUser.token)
 
         api.defaults.headers.common["Authorization"] = `Bearer ${authenticatedUser.token}`
-        setUser(authenticatedUser)
+        setUser(authenticatedUser.user)
     }
 
     function signOut() {
@@ -32,6 +41,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         delete api.defaults.headers.common["Authorization"]
 
         setUser(null)
+
+        navigate("/login", { replace: true })
+
     }
 
     function loadUser() {
@@ -47,7 +59,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 }
 
                 api.defaults.headers.common["Authorization"] = `Bearer ${token}`
-                setUser({ token, user: savedUser })
+                setUser(savedUser)
             } catch {
                 signOut()
             }
@@ -57,11 +69,47 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     useEffect(() => {
-        loadUser()
+        try {
+            loadUser()
+        } finally {
+            setIsLoading(false)
+        }
     }, [])
 
+    useEffect(() => {
+        const interceptor = api.interceptors.response.use(
+            (response) => response,
+
+            (error: AxiosError) => {
+
+                console.log("Interceptor executado")
+                console.log("Status:", error.response?.status)
+                console.log("URL:", error.config?.url)
+
+                const isUnauthorized = error.response?.status === 401
+
+                const isLoginRequest = error.config?.url?.includes("/session")
+
+                if (isUnauthorized && !isLoginRequest) {
+                    sessionStorage.setItem(
+                        "@TaskManager:sessionExpired",
+                        "true"
+                    )
+
+                    signOut()
+                }
+
+                return Promise.reject(error)
+            }
+        )
+
+        return () => {
+            api.interceptors.response.eject(interceptor)
+        }
+    }, [navigate])
+
     return (
-        <authContext.Provider value={{ user, signIn, signOut }}>
+        <authContext.Provider value={{ user, isLoading, signIn, signOut }}>
             {children}
         </authContext.Provider>
     )

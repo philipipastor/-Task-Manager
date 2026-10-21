@@ -1,4 +1,4 @@
-import { Route, Routes } from "react-router"
+import { Navigate, Route, Routes } from "react-router"
 
 import { Login } from "../pages/Login"
 import { Register } from "../pages/Register"
@@ -10,8 +10,12 @@ export function AuthRoutes() {
             <Route path="/" element={<Login />} />
             <Route path="/login" element={<Login />} />
             <Route path="/cadastro" element={<Register />} />
+            <Route path="/tasks" element={<Navigate to="/login" replace />} />
+            <Route path="/tasks/:id" element={<Navigate to="/login" replace />} />
+            <Route path="/newTask" element={<Navigate to="/login" replace />} />
+            <Route path="/team" element={<Navigate to="/login" replace />} />
 
-            <Route path="*" element={<NotFound/>} />
+            <Route path="*" element={<NotFound />} />
         </Routes>
     )
 }

@@ -2,7 +2,7 @@ import { useForm } from "react-hook-form"
 import { z } from "zod"
 import { NavLink, useNavigate } from "react-router"
 import { AxiosError } from "axios"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 
 import { Input } from "../components/input"
 import { Button } from "../components/button"
@@ -11,6 +11,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { useAuth } from "../hook/useAuth"
 
 import { api } from "../services/api"
+import type { User } from "../types/user"
 
 const schema = z.object({
     email: z.string().trim().email("Insira um e-mail válido"),
@@ -30,14 +31,15 @@ export function Login() {
 
     const [error, setError] = useState("")
 
+    const [sessionExpired, setSessionExpired] = useState(false)
+
     async function onSubmit(data: LoginData) {
         setError("")
-        console.log(data)
 
         try {
-            const response = await api.post("/session", data)
-            auth.signIn(response.data)
-            navigate("/tasks")
+            const response = await api.post<{ dataUser: User; token: string }>("/session", data)
+            auth.signIn({ user: response.data.dataUser, token: response.data.token })
+            navigate("/tasks", { replace: true })
 
         } catch (error) {
             console.log(error)
@@ -51,6 +53,20 @@ export function Login() {
         }
     }
 
+    useEffect(() => {
+        const expired = sessionStorage.getItem(
+            "@TaskManager:sessionExpired"
+        )
+
+        if (expired === "true") {
+            setSessionExpired(true)
+
+            sessionStorage.removeItem(
+                "@TaskManager:sessionExpired"
+            )
+        }
+    }, [])
+
     return (
         <main className="flex min-h-svh items-center justify-center bg-page px-4 py-10 sm:px-6">
             <section className="w-full max-w-md rounded-2xl border border-line bg-surface p-6 shadow-sm sm:p-10">
@@ -59,6 +75,16 @@ export function Login() {
                 <h1 id="login-title" className="text-3xl font-bold tracking-tight text-content">Organize seu dia.</h1>
 
                 <p className="mt-2 text-sm text-muted">Suas tarefas, um passo de cada vez.</p>
+
+                {sessionExpired && (
+                    <p
+                        role="alert"
+                        className="mt-6 rounded-lg border border-danger/15 bg-danger-bg px-4 py-3 text-center text-sm text-danger"
+                    >
+                        Sua sessão expirou. Faça login novamente para continuar.
+                    </p>
+                )}
+
                 <form className="mt-8 flex flex-col gap-5" onSubmit={handleSubmit(onSubmit)}>
                     <div className="flex flex-col gap-2">
                         <Input
