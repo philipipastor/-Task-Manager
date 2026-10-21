@@ -66,7 +66,12 @@ export function TaskDetails() {
         try {
             await api.delete(`/tasks/${id}`);
 
-            navigate("/tasks");
+            const confirmed = window.confirm("Deseja excluir essa tarefa ?")
+
+            if(confirmed){
+                navigate("/tasks")
+            }
+
         } catch (error) {
             console.log(error);
             setError("Não foi possível excluir a tarefa.");
@@ -175,7 +180,7 @@ export function TaskDetails() {
                 taskLog.map((log) => (
                     <div key={log.id} className="mb-3 w-full rounded-lg border border-line bg-surface p-4 text-sm">
                         <p className="font-medium wrap-anywhere text-brand">
-                            {log.old_status} → {log.new_status}
+                            {log.old_status.replace("_", " ")} → {log.new_status.replace("_", " ")}
                         </p>
                         <p className="mt-2 wrap-anywhere text-muted">
                             Alterado por: {log.user?.name}

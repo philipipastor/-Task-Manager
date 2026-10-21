@@ -46,7 +46,7 @@ export function TaskList() {
                     <h1 id="task-title" className="text-2xl font-semibold tracking-tight text-content">Minhas tarefas</h1>
 
                     <p className="mt-2 text-sm text-muted">Um lugar para acompanhar o que precisa ser feito</p>
-
+                    
                     <Button type="button" onClick={() => navigate("/newTask")}>
                         <img alt="" aria-hidden="true" src={iconMais} />
                         Nova tarefa
