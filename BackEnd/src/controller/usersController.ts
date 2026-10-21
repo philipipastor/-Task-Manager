@@ -32,7 +32,27 @@ class UsersController {
     }
 
     async index(request: Request, response: Response) {
-        const user = await prisma.user.findMany()
+        if (!request.user) {
+            throw new appError("Usuário não autenticado", 401)
+        }
+
+        if (!["Admin", "Member"].includes(request.user.role)) {
+            throw new appError("Acesso não autorizado", 403)
+        }
+
+        const user = await prisma.user.findMany({
+            where: request.user.role === "Member" ? { id: request.user.id } : {},
+            select: {
+                id: true,
+                name: true,
+                email: true,
+                role: true,
+                createdAt: true,
+                updateAt: true,
+            }
+        })
+
+
 
         response.json(user)
     }
