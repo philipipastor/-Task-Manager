@@ -2,6 +2,8 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { useState } from "react";
+import { isAxiosError } from "axios";
 
 import { api } from "../services/api";
 import { Button } from "./button";
@@ -21,6 +23,7 @@ type NewTeamProps = {
 };
 
 export function NewTeam({ onCancel, onCreated }: NewTeamProps) {
+    const [error, setError] = useState("");
     const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<FormData>({
         resolver: zodResolver(schema),
         defaultValues: {
@@ -30,12 +33,14 @@ export function NewTeam({ onCancel, onCreated }: NewTeamProps) {
     });
 
     async function createTeam(data: FormData) {
+        setError("");
         try {
             await api.post("/teams", data);
 
             await onCreated();
         } catch (error) {
-            console.log(error);
+            const message = isAxiosError(error) ? error.response?.data?.message : undefined;
+            setError(typeof message === "string" ? message : "Não foi possível criar a equipe. Tente novamente.");
         }
     }
 
@@ -44,6 +49,7 @@ export function NewTeam({ onCancel, onCreated }: NewTeamProps) {
             <button
                 type="button"
                 onClick={onCancel}
+                disabled={isSubmitting}
                 className="mb-5 inline-flex cursor-pointer items-center gap-2 rounded text-sm font-medium text-brand hover:underline focus-visible:outline-2 focus-visible:outline-brand"
             >
                 <img src={arrowBack} alt="" aria-hidden="true" className="size-4 shrink-0 object-contain invert" /> Voltar à equipe
@@ -67,6 +73,7 @@ export function NewTeam({ onCancel, onCreated }: NewTeamProps) {
                         id="team-name"
                         type="text"
                         placeholder="Ex.: Desenvolvimento"
+                        readOnly={isSubmitting}
                         {...register("name")}
                         className="h-11 w-full rounded-lg border border-line bg-surface px-3 text-base text-content sm:text-sm outline-none focus:border-brand focus:ring-2 focus:ring-brand/20"
                     />
@@ -91,21 +98,25 @@ export function NewTeam({ onCancel, onCreated }: NewTeamProps) {
                         id="team-description"
                         rows={3}
                         placeholder="Qual é o objetivo desta equipe?"
+                        readOnly={isSubmitting}
                         {...register("description")}
                         className="w-full resize-y rounded-lg border border-line bg-surface px-3 py-3 text-base text-content sm:text-sm outline-none focus:border-brand focus:ring-2 focus:ring-brand/20"
                     />
                 </div>
 
+                {error && <p role="alert" className="rounded-lg bg-danger-bg p-3 text-sm text-danger">{error}</p>}
+
                 <div className="flex flex-wrap justify-end gap-3 pt-1">
                     <button
                         type="button"
                         onClick={onCancel}
+                        disabled={isSubmitting}
                         className="h-11 cursor-pointer rounded-lg border border-line px-4 text-sm font-medium text-content hover:bg-page"
                     >
                         Cancelar
                     </button>
 
-                    <Button type="submit" disabled={isSubmitting}>
+                    <Button isLoading={isSubmitting} type="submit" disabled={isSubmitting}>
                         {isSubmitting ? "Criando..." : "Criar equipe"}
                     </Button>
                 </div>

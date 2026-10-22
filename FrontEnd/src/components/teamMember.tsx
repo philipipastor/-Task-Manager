@@ -3,9 +3,11 @@ import { type TeamMember as TeamMemberType } from "../types/teamsMember";
 type TeamMemberProps = {
   member: TeamMemberType;
   onRemove: (member: TeamMemberType) => void;
+  isRemoving?: boolean;
+  disabled?: boolean;
 };
 
-export function TeamMember({ member, onRemove }: TeamMemberProps) {
+export function TeamMember({ member, onRemove, isRemoving, disabled }: TeamMemberProps) {
   const initials = member.user.name
     .trim()
     .split(/\s+/)
@@ -34,11 +36,13 @@ export function TeamMember({ member, onRemove }: TeamMemberProps) {
 
       <button
         type="button"
+        disabled={disabled || isRemoving}
+        aria-busy={isRemoving}
         onClick={() => onRemove(member)}
         aria-label={`Remover ${member.user.name} da equipe`}
         className="min-h-11 shrink-0 cursor-pointer rounded px-2 text-xs font-medium text-muted transition-colors hover:text-danger focus-visible:outline-2 focus-visible:outline-brand"
       >
-        Remover
+        {isRemoving ? "Removendo..." : "Remover"}
       </button>
     </div>
   );

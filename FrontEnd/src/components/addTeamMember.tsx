@@ -41,6 +41,7 @@ export function AddTeamMember({
 }: AddTeamMemberProps) {
   const [tab, setTab] = useState<"existing" | "new">("existing");
   const [users, setUsers] = useState<User[]>([]);
+  const [loadingUsers, setLoadingUsers] = useState(true);
   const [error, setError] = useState("");
 
   const existingForm = useForm<ExistingUserForm>({
@@ -59,18 +60,24 @@ export function AddTeamMember({
     }
   });
 
+  const isSubmitting = existingForm.formState.isSubmitting || newUserForm.formState.isSubmitting;
+
   useEffect(() => {
+    let cancelled = false;
     async function fetchUsers() {
       try {
         const response = await api.get<User[]>("/users");
-        setUsers(response.data);
+        if (!cancelled) setUsers(response.data);
       } catch (error) {
         console.log(error);
-        setError("Não foi possível carregar os usuários.");
+        if (!cancelled) setError("Não foi possível carregar os usuários.");
+      } finally {
+        if (!cancelled) setLoadingUsers(false);
       }
     }
 
     fetchUsers();
+    return () => { cancelled = true; };
   }, []);
 
   async function addExistingUser(data: ExistingUserForm) {
@@ -114,6 +121,7 @@ export function AddTeamMember({
       <button
         type="button"
         onClick={onCancel}
+        disabled={isSubmitting}
         className="mb-5 inline-flex cursor-pointer items-center gap-2 rounded text-sm font-medium text-brand hover:underline focus-visible:outline-2 focus-visible:outline-brand"
       >
         <img src={arrowBack} alt="" aria-hidden="true" className="size-4 shrink-0 object-contain invert" /> Voltar à equipe
@@ -133,6 +141,7 @@ export function AddTeamMember({
       <div className="mt-6 flex flex-wrap gap-2" role="group" aria-label="Tipo de cadastro">
         <button
           type="button"
+          disabled={isSubmitting}
           aria-pressed={tab === "existing"}
           onClick={() => {
             setTab("existing");
@@ -149,6 +158,7 @@ export function AddTeamMember({
 
         <button
           type="button"
+          disabled={isSubmitting}
           aria-pressed={tab === "new"}
           onClick={() => {
             setTab("new");
@@ -170,6 +180,8 @@ export function AddTeamMember({
         </p>
       )}
 
+      {loadingUsers && tab === "existing" && <p role="status" className="mt-4 text-sm text-muted">Carregando usuários...</p>}
+
       {tab === "existing" ? (
         <form
           onSubmit={existingForm.handleSubmit(addExistingUser)}
@@ -186,11 +198,12 @@ export function AddTeamMember({
 
             <select
               id="existing-user"
+              disabled={loadingUsers || isSubmitting}
               {...existingForm.register("user_id")}
               className="h-11 w-full rounded-lg border border-line bg-surface px-3 text-base text-content sm:text-sm outline-none focus:border-brand focus:ring-2 focus:ring-brand/20"
             >
               <option value="" className="bg-surface">
-                Selecione um usuário
+                {loadingUsers ? "Carregando usuários..." : "Selecione um usuário"}
               </option>
 
               {users.map((user) => (
@@ -219,6 +232,7 @@ export function AddTeamMember({
             <button
               type="button"
               onClick={onCancel}
+              disabled={isSubmitting}
               className="h-11 cursor-pointer rounded-lg border border-line px-4 text-sm font-medium text-content hover:bg-page"
             >
               Cancelar
@@ -226,7 +240,8 @@ export function AddTeamMember({
 
             <Button
               type="submit"
-              disabled={existingForm.formState.isSubmitting}
+              isLoading={existingForm.formState.isSubmitting}
+              disabled={loadingUsers || isSubmitting || users.length === 0}
             >
               {existingForm.formState.isSubmitting
                 ? "Vinculando..."
@@ -252,6 +267,7 @@ export function AddTeamMember({
               id="new-user-name"
               type="text"
               placeholder="Ex.: Marina Souza"
+              readOnly={isSubmitting}
               {...newUserForm.register("name")}
               className="h-11 w-full rounded-lg border border-line bg-surface px-3 text-base text-content sm:text-sm outline-none focus:border-brand focus:ring-2 focus:ring-brand/20"
             />
@@ -275,6 +291,7 @@ export function AddTeamMember({
               id="new-user-email"
               type="email"
               placeholder="marina@exemplo.com"
+              readOnly={isSubmitting}
               {...newUserForm.register("email")}
               className="h-11 w-full rounded-lg border border-line bg-surface px-3 text-base text-content sm:text-sm outline-none focus:border-brand focus:ring-2 focus:ring-brand/20"
             />
@@ -298,6 +315,7 @@ export function AddTeamMember({
               id="new-user-password"
               type="password"
               placeholder="No mínimo 5 caracteres"
+              readOnly={isSubmitting}
               {...newUserForm.register("password")}
               className="h-11 w-full rounded-lg border border-line bg-surface px-3 text-base text-content sm:text-sm outline-none focus:border-brand focus:ring-2 focus:ring-brand/20"
             />
@@ -317,6 +335,7 @@ export function AddTeamMember({
             <button
               type="button"
               onClick={onCancel}
+              disabled={isSubmitting}
               className="h-11 cursor-pointer rounded-lg border border-line px-4 text-sm font-medium text-content hover:bg-page"
             >
               Cancelar
@@ -324,7 +343,8 @@ export function AddTeamMember({
 
             <Button
               type="submit"
-              disabled={newUserForm.formState.isSubmitting}
+              isLoading={newUserForm.formState.isSubmitting}
+              disabled={isSubmitting}
             >
               {newUserForm.formState.isSubmitting
                 ? "Criando..."

@@ -12,6 +12,7 @@ type TeamDetailsProps = {
   team: Teams | undefined;
   members: TeamMemberType[];
   loadingMembers: boolean;
+  removingMemberId: string | null;
   onRemoveMember: (member: TeamMemberType) => void;
   onAddMember: () => void
   onEdit: () => void;
@@ -19,7 +20,7 @@ type TeamDetailsProps = {
   changingStatus: boolean;
 };
 
-export function TeamDetails({ team, members, loadingMembers, onRemoveMember, onAddMember, onEdit, onToggleActive, changingStatus }: TeamDetailsProps) {
+export function TeamDetails({ team, members, loadingMembers, removingMemberId, onRemoveMember, onAddMember, onEdit, onToggleActive, changingStatus }: TeamDetailsProps) {
 
   if (!team) {
     return (
@@ -38,10 +39,10 @@ export function TeamDetails({ team, members, loadingMembers, onRemoveMember, onA
           <img src={iconPerson} alt="" aria-hidden="true" className="size-5 object-contain invert" />
         </div>
         <div className="ml-auto flex flex-wrap items-center justify-end gap-3">
-          <Button type="button" onClick={onEdit} disabled={changingStatus}>
+          <Button type="button" onClick={onEdit} disabled={changingStatus || !!removingMemberId}>
             Editar equipe
           </Button>
-          <button type="button" onClick={onToggleActive} disabled={changingStatus}
+          <button type="button" onClick={onToggleActive} disabled={changingStatus || !!removingMemberId} aria-busy={changingStatus}
             className={`inline-flex h-11 cursor-pointer items-center justify-center rounded-md border px-4 text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand disabled:cursor-not-allowed disabled:opacity-60 ${team.active ? "border-danger/40 text-danger hover:bg-danger-bg" : "border-brand/40 text-brand hover:bg-brand-light"}`}>
             {changingStatus ? "Salvando..." : team.active ? "Inativar equipe" : "Ativar equipe"}
           </button>
@@ -71,7 +72,7 @@ export function TeamDetails({ team, members, loadingMembers, onRemoveMember, onA
             </span>
           </h3>
 
-          <Button type="button" onClick={onAddMember}>
+          <Button type="button" onClick={onAddMember} disabled={!!removingMemberId || changingStatus}>
             <img src={iconMais} alt="" aria-hidden="true" />Adicionar membro
           </Button>
         </div>
@@ -91,6 +92,8 @@ export function TeamDetails({ team, members, loadingMembers, onRemoveMember, onA
                 key={member.id}
                 member={member}
                 onRemove={onRemoveMember}
+                isRemoving={removingMemberId === member.id}
+                disabled={!!removingMemberId || changingStatus}
               />
             ))}
           </div>

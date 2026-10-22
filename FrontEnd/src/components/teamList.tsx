@@ -4,6 +4,7 @@ import arrowNext from "../assets/seta-direita.png"
 
 type TeamListProps = {
     teams: Teams[];
+    disabled?: boolean;
     
     selectedTeamId: string | null;
     onSelectTeam: (id: string) => void;
@@ -11,6 +12,7 @@ type TeamListProps = {
 
 export function TeamList({ 
     teams,
+    disabled,
     selectedTeamId,
     onSelectTeam
 }: TeamListProps) {
@@ -25,6 +27,7 @@ export function TeamList({
                     <button
                         key={team.id}
                         type="button"
+                        disabled={disabled}
                         aria-pressed={selectedTeamId === team.id}
                         onClick={() => onSelectTeam(team.id)}
                         className={`w-full cursor-pointer rounded-lg p-3 text-left transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand ${selectedTeamId === team.id

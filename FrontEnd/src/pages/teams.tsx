@@ -28,6 +28,7 @@ export function Teams() {
 
   const [loadingTeams, setLoadingTeams] = useState(true);
   const [loadingMembers, setLoadingMembers] = useState(false);
+  const [removingMemberId, setRemovingMemberId] = useState<string | null>(null);
 
   const [error, setError] = useState("");
 
@@ -97,7 +98,7 @@ export function Teams() {
   }, [selectedTeamId]);
 
   async function removeMember(member: TeamMember) {
-    if (!selectedTeamId) return;
+    if (!selectedTeamId || removingMemberId) return;
 
     const confirmed = window.confirm(
       `Deseja remover ${member.user.name} desta equipe?`
@@ -105,6 +106,7 @@ export function Teams() {
 
     if (!confirmed) return;
 
+    setRemovingMemberId(member.id);
     setError("");
 
     try {
@@ -138,6 +140,8 @@ export function Teams() {
     } catch (error) {
       console.log(error);
       setError("Não foi possível remover o membro.");
+    } finally {
+      setRemovingMemberId(null);
     }
   }
 
@@ -243,6 +247,7 @@ export function Teams() {
             <TeamList
               teams={teams}
               selectedTeamId={selectedTeamId}
+              disabled={!!removingMemberId}
               onSelectTeam={(id) => {
                 setError("");
                 setSelectedTeamId(id);
@@ -273,6 +278,7 @@ export function Teams() {
                 team={selectedTeam}
                 members={members}
                 loadingMembers={loadingMembers}
+                removingMemberId={removingMemberId}
                 onRemoveMember={removeMember}
                 onAddMember={() => setView("addMember")}
                 onEdit={() => { setError(""); setView("edit"); }}

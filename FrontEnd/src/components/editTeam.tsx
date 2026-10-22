@@ -120,7 +120,7 @@ export function EditTeam({ team, onCancel, onEdited }: EditTeamProps) {
                         Cancelar
                     </button>
 
-                    <Button type="submit" disabled={isSubmitting}>
+                    <Button isLoading={isSubmitting} type="submit" disabled={isSubmitting}>
                         {isSubmitting ? "Salvando..." : "Salvar alterações"}
                     </Button>
                 </div>
