@@ -19,22 +19,30 @@ export function TaskList() {
     const [tasks, setTasks] = useState<Task[]>([])
     const [searchParams, setSearchParams] = useSearchParams()
 
-    async function fetchTasks() {
-        try {
-            const response = await api.get<Task[]>("/tasks", {
-                params: { status: searchParams.get("status") || undefined }
-            })
-
-            setTasks(response.data)
-            setTaskCount(response.data.length)
-
-        } catch (error) {
-            console.log(error)
-        }
-    }
+    const [isLoading, setIsLoading] = useState(true)
+    const [error, setError] = useState("")
 
     useEffect(() => {
+        let cancelled = false
+        async function fetchTasks() {
+            setIsLoading(true)
+            setError("")
+            try {
+                const response = await api.get<Task[]>("/tasks", {
+                    params: { status: searchParams.get("status") || undefined }
+                })
+                if (!cancelled) {
+                    setTasks(response.data)
+                    setTaskCount(response.data.length)
+                }
+            } catch {
+                if (!cancelled) setError("Não foi possível carregar as tarefas. Tente novamente.")
+            } finally {
+                if (!cancelled) setIsLoading(false)
+            }
+        }
         fetchTasks()
+        return () => { cancelled = true }
     }, [searchParams])
 
     return (
@@ -59,6 +67,7 @@ export function TaskList() {
                     <div className="flex items-center gap-5 [&>select]:h-11 [&>select]:max-w-48 [&>select]:text-sm [&>select]:font-medium">
                         <Select
                             options={statusOptions}
+                            disabled={isLoading}
                             value={searchParams.get("status") ?? ""}
                             onChange={(event) => {
                                 setSearchParams((params) => {
@@ -74,13 +83,19 @@ export function TaskList() {
                                 });
                             }}
                         />
-                        <span className="shrink-0 text-sm text-muted after:content-['_tarefas']">{taskCount}</span>
+                        <span className="shrink-0 text-sm text-muted after:content-['_tarefas']">{isLoading ? "..." : taskCount}</span>
                     </div>
                 </div>
 
 
                 <div className="mt-5 flex flex-col gap-2.5">
-                    {tasks.map((task) => (
+                    {isLoading ? (
+                        <p role="status" className="py-6 text-sm text-muted">Carregando tarefas...</p>
+                    ) : error ? (
+                        <p role="alert" className="py-6 text-sm text-danger">{error}</p>
+                    ) : tasks.length === 0 ? (
+                        <p className="py-6 text-sm text-muted">Nenhuma tarefa encontrada.</p>
+                    ) : tasks.map((task) => (
                         <button key={task.id} onClick={() => navigate(`/tasks/${task.id}`)}>
                             <TaskCard key={task.id} task={task} />
                         </button>

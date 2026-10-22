@@ -52,7 +52,7 @@ export function TaskAssignmentFields({
 
                         <div>
                             {isAdmin && (
-                                <button type="button" onClick={() => navigate("/team")} aria-label="Ir para equipes e membros" title="Ir para equipes e membros" className="flex size-11 shrink-0 cursor-pointer items-center justify-center rounded-md border border-line bg-page transition-colors hover:border-brand hover:bg-brand-light focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand">
+                                <button type="button" disabled={isSubmitting} onClick={() => navigate("/team")} aria-label="Ir para equipes e membros" title="Ir para equipes e membros" className="flex size-11 shrink-0 cursor-pointer items-center justify-center rounded-md border border-line bg-page transition-colors hover:border-brand hover:bg-brand-light focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand">
                                     <span>
                                         <img src={iconMais} alt="" aria-hidden="true" className="size-4 object-contain invert" />
                                     </span>
@@ -94,7 +94,7 @@ export function TaskAssignmentFields({
                         />
                         <div>
                             {isAdmin && (
-                                <button type="button" onClick={() => navigate("/team")} aria-label="Ir para equipes e membros" title="Ir para equipes e membros" className="flex size-11 shrink-0 cursor-pointer items-center justify-center rounded-md border border-line bg-page transition-colors hover:border-brand hover:bg-brand-light focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand">
+                                <button type="button" disabled={isSubmitting} onClick={() => navigate("/team")} aria-label="Ir para equipes e membros" title="Ir para equipes e membros" className="flex size-11 shrink-0 cursor-pointer items-center justify-center rounded-md border border-line bg-page transition-colors hover:border-brand hover:bg-brand-light focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand">
                                     <span>
                                         <img src={iconMais} alt="" aria-hidden="true" className="size-4 object-contain invert" />
                                     </span>

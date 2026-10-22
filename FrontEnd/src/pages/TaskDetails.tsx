@@ -34,14 +34,18 @@ export function TaskDetails() {
     const [details, setDetails] = useState<Task>();
     const [taskLog, setTaskLog] = useState<TaskLog[]>([]);
     const [error, setError] = useState("");
+    const [isLoading, setIsLoading] = useState(true);
+    const [loadingHistory, setLoadingHistory] = useState(true);
+    const [historyError, setHistoryError] = useState("");
+    const [isDeleting, setIsDeleting] = useState(false);
 
-    const { handleSubmit, control, reset, formState: { errors } } = useForm<Status>({
+    const { handleSubmit, control, reset, formState: { errors, isSubmitting } } = useForm<Status>({
         resolver: zodResolver(schema),
         defaultValues: { status: "Pendente" }
     });
 
     async function updateTask(data: Status) {
-        if (!id) return;
+        if (!id || !details || isDeleting) return;
 
         setError("");
 
@@ -61,29 +65,35 @@ export function TaskDetails() {
     }
 
     async function removeTask() {
-        if (!id) return;
+        if (!id || !details || isDeleting || isSubmitting) return;
+        if (!window.confirm("Deseja excluir essa tarefa?")) return;
+        setIsDeleting(true);
+        setError("");
 
         try {
             await api.delete(`/tasks/${id}`);
 
-            const confirmed = window.confirm("Deseja excluir essa tarefa ?")
-
-            if(confirmed){
-                navigate("/tasks")
-            }
+            navigate("/tasks")
 
         } catch (error) {
             console.log(error);
             setError("Não foi possível excluir a tarefa.");
+        } finally {
+            setIsDeleting(false);
         }
     }
 
     useEffect(() => {
+        let cancelled = false;
         async function taskDetails() {
-            if (!id) return;
+            setIsLoading(true);
+            setDetails(undefined);
+            setError("");
+            if (!id) { setIsLoading(false); return; }
 
             try {
                 const response = await api.get<Task>(`/tasks/${id}`);
+                if (cancelled) return;
 
                 setDetails(response.data);
 
@@ -93,27 +103,37 @@ export function TaskDetails() {
 
             } catch (error) {
                 console.log(error);
-                setError("Não foi possível carregar a tarefa.");
+                if (!cancelled) setError("Não foi possível carregar a tarefa.");
+            } finally {
+                if (!cancelled) setIsLoading(false);
             }
         }
 
         taskDetails();
+        return () => { cancelled = true; };
     }, [id, reset]);
 
     useEffect(() => {
+        let cancelled = false;
         async function taskLog() {
+            setLoadingHistory(true);
+            setHistoryError("");
             try {
                 const response = await api.get(`/tasks/history/${id}`)
-                setTaskLog(response.data)
+                if (!cancelled) setTaskLog(response.data)
 
             } catch (error) {
                 console.log(error)
+                if (!cancelled) setHistoryError("Não foi possível carregar o histórico.");
+            } finally {
+                if (!cancelled) setLoadingHistory(false);
             }
 
         }
 
         taskLog()
-    }, [])
+        return () => { cancelled = true; };
+    }, [id])
 
     return (
         <main className="mx-auto min-h-svh w-full max-w-272 bg-page px-4 py-8 sm:px-8">
@@ -123,6 +143,7 @@ export function TaskDetails() {
                     Voltar às tarefas
                 </p>
             </NavLink>
+            {isLoading && <p role="status" className="mb-4 text-sm text-muted">Carregando tarefa...</p>}
             <h1 className="text-2xl font-semibold tracking-tight wrap-anywhere text-content">
                 {details?.title}
             </h1>
@@ -144,6 +165,7 @@ export function TaskDetails() {
                     render={({ field }) => (
                         <Select
                             options={options}
+                            disabled={isLoading || !details || isSubmitting || isDeleting}
                             value={field.value}
                             onChange={field.onChange}
                         />
@@ -162,19 +184,23 @@ export function TaskDetails() {
                     </p>
                 )}
 
-                <Button type="button" onClick={removeTask}>
-                    Excluir tarefa
+                <Button type="button" onClick={removeTask} isLoading={isDeleting} disabled={isLoading || !details || isSubmitting}>
+                    {isDeleting ? "Excluindo..." : "Excluir tarefa"}
                 </Button>
 
-                <Button type="submit">
-                    Salvar status
+                <Button type="submit" isLoading={isSubmitting} disabled={isLoading || !details || isDeleting}>
+                    {isSubmitting ? "Salvando..." : "Salvar status"}
                 </Button>
             </form>
 
             <h3 className="mt-9 mb-3 text-base font-semibold text-content">Histórico de status</h3>
             <h3 className="hidden">Histórico de status</h3>
 
-            {taskLog.length === 0 ? (
+            {loadingHistory ? (
+                <p role="status" className="text-sm text-muted">Carregando histórico...</p>
+            ) : historyError ? (
+                <p role="alert" className="text-sm text-danger">{historyError}</p>
+            ) : taskLog.length === 0 ? (
                 <p className="text-sm text-muted">Nenhuma mudança de status ainda.</p>
             ) : (
                 taskLog.map((log) => (

@@ -108,6 +108,7 @@ export function NewTask() {
 
                 <form className="mt-8 space-y-5" onSubmit={handleSubmit(onSubmit)}>
                     <Input
+                        readOnly={isSubmitting}
                         label="Título"
                         type="text"
                         placeholder="Ex: Criar tela de login"
@@ -119,6 +120,7 @@ export function NewTask() {
                     {errors.title && <p id="title-error" className="text-sm text-danger">{errors.title.message}</p>}
 
                     <Input
+                        readOnly={isSubmitting}
                         label="Descrição"
                         type="text"
                         placeholder="Descreva o que pode ser feito"
@@ -137,6 +139,7 @@ export function NewTask() {
                         render={({ field }) => (
                             <Select
                                 id="task-priority"
+                                disabled={isSubmitting}
                                 options={priorityOptions}
                                 value={field.value ?? ""}
                                 onChange={field.onChange} />
@@ -170,7 +173,7 @@ export function NewTask() {
 
                     <div className="flex flex-wrap justify-end gap-3 [&>div:first-child>button]:border [&>div:first-child>button]:border-line [&>div:first-child>button]:bg-surface [&>div:first-child>button]:text-content">
                         <Button type="button" disabled={isSubmitting} onClick={() => navigate("/tasks")}>Cancelar</Button>
-                        <Button type="submit" disabled={isSubmitting || loadingOptions || !!optionsError || !selectedTeamId || (isAdmin && (loadingMembers || !!membersError || availableUsers.length === 0))}>
+                        <Button isLoading={isSubmitting} type="submit" disabled={isSubmitting || loadingOptions || !!optionsError || !selectedTeamId || (isAdmin && (loadingMembers || !!membersError || availableUsers.length === 0))}>
                             {isSubmitting ? "Criando..." : "Criar tarefa"}
                         </Button>
                     </div>
