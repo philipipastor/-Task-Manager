@@ -24,7 +24,7 @@ export function Register() {
 
   const [error, setError] = useState("")
 
-  const { register, handleSubmit, formState: { errors } } = useForm<RegisterData>({
+  const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<RegisterData>({
     resolver: zodResolver(schema)
   })
 
@@ -59,9 +59,10 @@ export function Register() {
         <h1 id="register-title" className="text-3xl font-bold tracking-tight text-content">Crie sua conta.</h1>
 
         <p className="mt-2 text-sm text-muted">Suas tarefas, um passo de cada vez.</p>
-        <form className="mt-8 flex flex-col gap-5" onSubmit={handleSubmit(onSubmit)}>
+        <form aria-busy={isSubmitting} className="mt-8 flex flex-col gap-5" onSubmit={handleSubmit(onSubmit)}>
           <div>
             <Input
+              readOnly={isSubmitting}
               label="Nome"
               type="text"
               placeholder="Seu nome"
@@ -80,6 +81,7 @@ export function Register() {
 
           <div className="flex flex-col gap-2">
             <Input
+              readOnly={isSubmitting}
               label="E-mail"
               type="email"
               placeholder="seu@email.com"
@@ -98,6 +100,7 @@ export function Register() {
 
           <div className="flex flex-col gap-2">
             <Input
+              readOnly={isSubmitting}
               label="Senha"
               type="password"
               placeholder="Digite sua senha"
@@ -118,7 +121,7 @@ export function Register() {
             <p role="alert" className="rounded-lg border border-danger/15 bg-danger-bg px-4 py-3 text-center text-sm text-danger">{error}</p>
           )}
 
-          <Button type="submit">Cria conta</Button>
+          <Button type="submit" isLoading={isSubmitting}>{isSubmitting ? "Cadastrando..." : "Criar conta"}</Button>
         </form>
 
         <NavLink to="/login" className="block rounded-lg focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand">

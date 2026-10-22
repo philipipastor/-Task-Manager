@@ -25,7 +25,7 @@ export function Login() {
 
     const auth = useAuth()
 
-    const { register, handleSubmit, formState: { errors } } = useForm<LoginData>({
+    const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<LoginData>({
         resolver: zodResolver(schema)
     })
 
@@ -85,9 +85,10 @@ export function Login() {
                     </p>
                 )}
 
-                <form className="mt-8 flex flex-col gap-5" onSubmit={handleSubmit(onSubmit)}>
+                <form aria-busy={isSubmitting} className="mt-8 flex flex-col gap-5" onSubmit={handleSubmit(onSubmit)}>
                     <div className="flex flex-col gap-2">
                         <Input
+                          readOnly={isSubmitting}
                             label="E-mail"
                             type="email"
                             placeholder="seu@email.com"
@@ -106,6 +107,7 @@ export function Login() {
 
                     <div className="flex flex-col gap-2">
                         <Input
+                          readOnly={isSubmitting}
                             label="Senha"
                             type="password"
                             placeholder="Digite sua senha"
@@ -126,7 +128,7 @@ export function Login() {
                         <p role="alert" className="rounded-lg border border-danger/15 bg-danger-bg px-4 py-3 text-center text-sm text-danger">{error}</p>
                     )}
 
-                    <Button type="submit">Entrar</Button>
+                    <Button type="submit" isLoading={isSubmitting}>{isSubmitting ? "Entrando..." : "Entrar"}</Button>
                 </form>
 
                 <NavLink to="/cadastro" className="block rounded-lg focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand">
