@@ -1,3 +1,4 @@
+import { requireWorkSpaceMember } from "@/utils/requireWorkSpaceMember";
 import { Request, Response } from "express";
 import { z } from "zod"
 import { prisma } from "@/database/prisma"
@@ -32,29 +33,37 @@ class UsersController {
     }
 
     async index(request: Request, response: Response) {
-        if (!request.user) {
-            throw new appError("Usuário não autenticado", 401)
-        }
+        const querySchema = z.object({
+            workSpaceId: z.string().uuid()
+        })
 
-        if (!["Admin", "Member"].includes(request.user.role)) {
-            throw new appError("Acesso não autorizado", 403)
-        }
+        const { workSpaceId } = querySchema.parse(request.query)
+
+        const member = await requireWorkSpaceMember(request.user?.id, workSpaceId)
 
         const user = await prisma.user.findMany({
-            where: request.user.role === "Member" ? { id: request.user.id } : {},
+            where: {
+                workSpaceMembers: { some: { workSpaceId } },
+                id: member.role === "Member" ? member.userId : undefined
+            },
             select: {
                 id: true,
                 name: true,
                 email: true,
-                role: true,
+                workSpaceMembers: {
+                    where: { workSpaceId },
+                    select: { role: true }
+                },
                 createdAt: true,
                 updateAt: true,
             }
         })
 
 
-
-        response.json(user)
+        response.json(user.map(({ workSpaceMembers, ...userData }) => ({
+            ...userData,
+            role: workSpaceMembers[0].role
+        })))
     }
 }
 
